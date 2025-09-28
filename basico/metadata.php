@@ -70,25 +70,15 @@ try {
     if ($instanceId) {
         $metadata['success'] = true;
         
-        // Obtener metadatos uno por uno con logging
+        // Obtener metadatos básicos (igual que tus comandos curl)
         $availabilityZone = getEC2Metadata('placement/availability-zone', $token);
         $region = getEC2Metadata('placement/region', $token);
         $publicIpv4 = getEC2Metadata('public-ipv4', $token);
-        $localIpv4 = getEC2Metadata('local-ipv4', $token);
+        $localIpv4 = getEC2Metadata('local-ipv4', $token); // Este debería funcionar ahora
         $instanceType = getEC2Metadata('instance-type', $token);
         
-        // Intentar métodos alternativos para IP privada si falla
-        if (!$localIpv4) {
-            // Método alternativo 1: network/interfaces/macs/
-            $macs = getEC2Metadata('network/interfaces/macs/', $token);
-            if ($macs) {
-                $macList = explode("\n", trim($macs));
-                if (!empty($macList)) {
-                    $firstMac = trim($macList[0]);
-                    $localIpv4 = getEC2Metadata("network/interfaces/macs/{$firstMac}local-ipv4s", $token);
-                }
-            }
-        }
+        // Log específico para IP privada
+        error_log("IP Privada obtenida: " . ($localIpv4 ?: "NULL"));
         
         $metadata['data'] = [
             'instanceId' => $instanceId,
@@ -102,12 +92,15 @@ try {
             'publicHostname' => getEC2Metadata('public-hostname', $token)
         ];
         
-        // Debug info
+        // Debug info simplificado
         $metadata['debug'] = [
             'token_used' => $token !== null,
-            'local_ip_attempts' => [
-                'direct' => getEC2Metadata('local-ipv4', $token) !== null,
-                'via_mac' => $localIpv4 !== null
+            'token_length' => $token ? strlen($token) : 0,
+            'local_ipv4_raw' => $localIpv4,
+            'endpoints_tested' => [
+                'instance-id' => $instanceId !== null,
+                'local-ipv4' => $localIpv4 !== null,
+                'public-ipv4' => $publicIpv4 !== null
             ]
         ];
         
