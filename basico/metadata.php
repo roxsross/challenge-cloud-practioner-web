@@ -31,20 +31,25 @@ function getEC2Metadata($endpoint, $token = null) {
     return $result !== false ? trim($result) : null;
 }
 
-// Función para obtener token IMDSv2
+// Función para obtener token IMDSv2 (igual que tu comando curl)
 function getIMDSv2Token() {
     $url = "http://169.254.169.254/latest/api/token";
     
     $context = stream_context_create([
         'http' => [
             'method' => 'PUT',
-            'timeout' => 3,
+            'timeout' => 5,
             'header' => "X-aws-ec2-metadata-token-ttl-seconds: 21600\r\n"
         ]
     ]);
     
     $result = @file_get_contents($url, false, $context);
-    return $result !== false ? trim($result) : null;
+    $token = $result !== false ? trim($result) : null;
+    
+    // Debug: Log si se obtuvo el token
+    error_log("Token IMDSv2: " . ($token ? "OBTENIDO" : "FALLIDO"));
+    
+    return $token;
 }
 
 try {
