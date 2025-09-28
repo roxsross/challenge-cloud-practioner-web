@@ -4,7 +4,7 @@
 sudo apt update
 
 # Instalar nginx y herramientas
-sudo apt install nginx unzip wget -y
+sudo apt install nginx unzip git wget -y
 
 # Iniciar nginx
 sudo systemctl start nginx
