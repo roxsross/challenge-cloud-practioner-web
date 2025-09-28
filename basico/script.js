@@ -124,78 +124,182 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     /**
-     * Función para intentar detectar si estamos en AWS
+     * Función para detectar si estamos en AWS usando múltiples métodos
      */
     async function detectAWSEnvironment() {
+        console.log('🔍 Iniciando detección de entorno AWS...');
+        
+        // Método 1: Usar endpoint PHP para obtener metadatos del servidor
         try {
-            // Intentar acceder a los metadatos de instancia de AWS
-            // Nota: Esto solo funcionará si realmente estamos en una instancia EC2
-            const metadataUrl = 'http://169.254.169.254/latest/meta-data/';
+            console.log('🚀 Intentando obtener metadatos via servidor PHP...');
             
-            // Configurar timeout más largo para AWS
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 5000);
+            const response = await fetch('metadata.php', {
+                method: 'GET',
+                cache: 'no-cache'
+            });
             
-            // Intentar obtener el token IMDSv2 primero (más seguro)
-            let token = null;
-            try {
-                const tokenResponse = await fetch('http://169.254.169.254/latest/api/token', {
-                    method: 'PUT',
-                    headers: {
-                        'X-aws-ec2-metadata-token-ttl-seconds': '21600'
-                    },
-                    signal: controller.signal
-                });
-                if (tokenResponse.ok) {
-                    token = await tokenResponse.text();
+            if (response.ok) {
+                const metadata = await response.json();
+                console.log('📊 Respuesta del servidor:', metadata);
+                
+                if (metadata.success && metadata.data) {
+                    console.log('✅ Metadatos EC2 obtenidos via servidor - Definitivamente en AWS');
+                    return {
+                        isAWS: true,
+                        method: 'server-metadata',
+                        instanceId: metadata.data.instanceId,
+                        availabilityZone: metadata.data.availabilityZone,
+                        region: metadata.data.region,
+                        publicIp: metadata.data.publicIpv4,
+                        localIp: metadata.data.localIpv4,
+                        instanceType: metadata.data.instanceType,
+                        amiId: metadata.data.amiId
+                    };
+                } else {
+                    console.log('⚠️ Servidor PHP no pudo obtener metadatos:', metadata.error);
                 }
-            } catch (e) {
-                console.log('IMDSv2 token no disponible, usando IMDSv1');
             }
+        } catch (error) {
+            console.log('❌ Error accediendo a endpoint PHP:', error.message);
+        }
+        
+        // Método 2: Intentar acceder directamente a metadatos EC2 (puede fallar por CORS)
+        try {
+            const metadataUrl = 'http://169.254.169.254/latest/meta-data/';
+            console.log('📡 Intentando acceder directamente a metadatos EC2...');
             
-            // Configurar headers para la petición
-            const headers = token ? { 'X-aws-ec2-metadata-token': token } : {};
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 3000);
             
             const response = await fetch(metadataUrl + 'instance-id', {
                 signal: controller.signal,
-                headers: headers
+                mode: 'cors'
             });
             
             clearTimeout(timeoutId);
             
             if (response.ok) {
-                // Si llegamos aquí, definitivamente estamos en AWS
+                console.log('✅ Metadatos EC2 accesibles directamente - Definitivamente en AWS');
                 const instanceId = await response.text();
                 
-                // Obtener información adicional de AWS
-                const [azResponse, regionResponse, publicIpResponse, localIpResponse] = await Promise.all([
-                    fetch(metadataUrl + 'placement/availability-zone', { headers }),
-                    fetch(metadataUrl + 'placement/region', { headers }),
-                    fetch(metadataUrl + 'public-ipv4', { headers }).catch(() => null),
-                    fetch(metadataUrl + 'local-ipv4', { headers }).catch(() => null)
+                // Obtener información adicional
+                const [azResponse, regionResponse] = await Promise.all([
+                    fetch(metadataUrl + 'placement/availability-zone').catch(() => null),
+                    fetch(metadataUrl + 'placement/region').catch(() => null)
                 ]);
                 
-                const availabilityZone = azResponse.ok ? await azResponse.text() : 'Desconocida';
-                const region = regionResponse.ok ? await regionResponse.text() : 'Desconocida';
-                const publicIp = publicIpResponse && publicIpResponse.ok ? await publicIpResponse.text() : null;
-                const localIp = localIpResponse && localIpResponse.ok ? await localIpResponse.text() : null;
+                const availabilityZone = azResponse && azResponse.ok ? await azResponse.text() : 'Detectando...';
+                const region = regionResponse && regionResponse.ok ? await regionResponse.text() : 'Detectando...';
                 
                 return {
                     isAWS: true,
+                    method: 'direct-metadata',
                     instanceId: instanceId,
                     availabilityZone: availabilityZone,
                     region: region,
-                    publicIp: publicIp,
-                    localIp: localIp
+                    publicIp: null,
+                    localIp: null
                 };
             }
         } catch (error) {
-            // Si hay error, probablemente no estamos en AWS o no tenemos acceso a metadatos
-            console.log('No se detectó entorno AWS:', error.message);
+            console.log('❌ Metadatos EC2 no accesibles directamente:', error.message);
         }
         
+        // Método 3: Detectar por características del servidor web
+        try {
+            console.log('🌐 Analizando características del servidor...');
+            
+            // Obtener información del servidor desde headers HTTP
+            const response = await fetch(window.location.href, {
+                method: 'HEAD',
+                cache: 'no-cache'
+            });
+            
+            const serverHeader = response.headers.get('Server') || '';
+            const xAmzHeader = response.headers.get('x-amz-request-id');
+            const xAmzCfId = response.headers.get('x-amz-cf-id');
+            
+            console.log('📋 Headers del servidor:', {
+                server: serverHeader,
+                xAmzHeader: xAmzHeader,
+                xAmzCfId: xAmzCfId
+            });
+            
+            // Detectar si hay indicios de AWS
+            const awsIndicators = [
+                serverHeader.toLowerCase().includes('amazon'),
+                serverHeader.toLowerCase().includes('aws'),
+                !!xAmzHeader,
+                !!xAmzCfId
+            ];
+            
+            if (awsIndicators.some(indicator => indicator)) {
+                console.log('✅ Indicadores AWS encontrados en headers');
+                return {
+                    isAWS: true,
+                    method: 'headers',
+                    instanceId: 'Detectado por headers',
+                    availabilityZone: 'Detectando...',
+                    region: 'Detectando...',
+                    publicIp: null,
+                    localIp: null
+                };
+            }
+        } catch (error) {
+            console.log('❌ Error analizando headers:', error.message);
+        }
+        
+        // Método 4: Detectar por IP y patrones de red
+        try {
+            console.log('🔍 Analizando patrones de red...');
+            
+            const hostname = window.location.hostname;
+            const isEC2PublicIP = /^\d+\.\d+\.\d+\.\d+$/.test(hostname);
+            
+            // Rangos de IP típicos de AWS EC2
+            if (isEC2PublicIP) {
+                const ipParts = hostname.split('.').map(Number);
+                const isAWSRange = (
+                    // Rangos comunes de AWS
+                    (ipParts[0] === 3 && ipParts[1] >= 208) || // 3.208.x.x - 3.255.x.x
+                    (ipParts[0] === 13) || // 13.x.x.x
+                    (ipParts[0] === 15) || // 15.x.x.x
+                    (ipParts[0] === 18) || // 18.x.x.x
+                    (ipParts[0] === 34) || // 34.x.x.x (us-west-2)
+                    (ipParts[0] === 35) || // 35.x.x.x
+                    (ipParts[0] === 52) || // 52.x.x.x
+                    (ipParts[0] === 54) || // 54.x.x.x
+                    (ipParts[0] === 107)   // 107.x.x.x
+                );
+                
+                if (isAWSRange) {
+                    console.log('✅ IP detectada en rango típico de AWS EC2:', hostname);
+                    
+                    // Intentar determinar región por IP
+                    let estimatedRegion = 'us-east-1'; // default
+                    if (ipParts[0] === 34) estimatedRegion = 'us-west-2';
+                    else if (ipParts[0] === 13) estimatedRegion = 'us-east-1';
+                    else if (ipParts[0] === 52) estimatedRegion = 'eu-west-1';
+                    
+                    return {
+                        isAWS: true,
+                        method: 'ip-pattern',
+                        instanceId: 'Detectado por IP',
+                        availabilityZone: `${estimatedRegion}a`,
+                        region: estimatedRegion,
+                        publicIp: hostname,
+                        localIp: null
+                    };
+                }
+            }
+        } catch (error) {
+            console.log('❌ Error analizando patrones de red:', error.message);
+        }
+        
+        console.log('❌ No se detectó entorno AWS');
         return {
             isAWS: false,
+            method: 'none',
             instanceId: null,
             availabilityZone: 'N/A',
             region: 'N/A',
@@ -285,7 +389,8 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (awsInfo.isAWS) {
                 // Estamos definitivamente en AWS EC2
-                environmentElement.textContent = 'AWS Cloud (EC2)';
+                console.log('🎉 AWS detectado usando método:', awsInfo.method);
+                environmentElement.textContent = `AWS Cloud (EC2) - ${awsInfo.method}`;
                 environmentElement.className = 'metadata-value environment-aws';
                 awsZoneElement.textContent = awsInfo.availabilityZone;
                 regionElement.textContent = `${awsInfo.region} (${awsInfo.availabilityZone})`;
@@ -294,17 +399,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 publicIPLabel.textContent = '🌐 IP Servidor EC2:';
                 localIPLabel.textContent = '🏠 IP Privada EC2:';
                 
-                // Para AWS, mostrar las IPs del servidor (no del cliente)
+                // Para AWS, mostrar la IP del hostname (que es la IP pública de EC2)
+                const currentIP = window.location.hostname;
                 if (awsInfo.publicIp) {
                     publicIPElement.textContent = awsInfo.publicIp;
+                } else if (/^\d+\.\d+\.\d+\.\d+$/.test(currentIP)) {
+                    publicIPElement.textContent = currentIP;
                 } else {
-                    publicIPElement.textContent = 'No asignada';
+                    publicIPElement.textContent = 'Detectando...';
                 }
                 
                 if (awsInfo.localIp) {
                     localIPElement.textContent = awsInfo.localIp;
                 } else {
-                    localIPElement.textContent = 'No disponible';
+                    localIPElement.textContent = 'No accesible desde navegador';
                 }
                 
                 // Actualizar estado del despliegue para AWS
