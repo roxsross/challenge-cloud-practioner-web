@@ -10,7 +10,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const toggleMetadata = document.getElementById('toggleMetadata');
     const metadataContent = document.getElementById('metadataContent');
     const publicIPElement = document.getElementById('publicIP');
+    const publicIPLabel = document.getElementById('publicIPLabel');
     const localIPElement = document.getElementById('localIP');
+    const localIPLabel = document.getElementById('localIPLabel');
     const environmentElement = document.getElementById('environment');
     const awsZoneElement = document.getElementById('awsZone');
     const regionElement = document.getElementById('region');
@@ -41,12 +43,26 @@ document.addEventListener('DOMContentLoaded', function() {
      */
     function isLocalhost() {
         const hostname = window.location.hostname;
-        return hostname === 'localhost' || 
-               hostname === '127.0.0.1' || 
-               hostname === '0.0.0.0' ||
-               hostname.startsWith('192.168.') ||
-               hostname.startsWith('10.') ||
-               hostname.startsWith('172.');
+        const port = window.location.port;
+        
+        // Detectar localhost por hostname
+        const isLocalhostHostname = hostname === 'localhost' || 
+                                   hostname === '127.0.0.1' || 
+                                   hostname === '0.0.0.0';
+        
+        // Detectar redes privadas locales
+        const isPrivateNetwork = hostname.startsWith('192.168.') ||
+                                 hostname.startsWith('10.') ||
+                                 (hostname.startsWith('172.') && 
+                                  parseInt(hostname.split('.')[1]) >= 16 && 
+                                  parseInt(hostname.split('.')[1]) <= 31);
+        
+        // Detectar puertos de desarrollo comunes
+        const isDevelopmentPort = port && (port === '3000' || port === '8000' || 
+                                          port === '8080' || port === '5000' || 
+                                          port === '4200' || port === '3001');
+        
+        return isLocalhostHostname || isPrivateNetwork || isDevelopmentPort;
     }
     
     /**
@@ -116,37 +132,61 @@ document.addEventListener('DOMContentLoaded', function() {
             // Nota: Esto solo funcionará si realmente estamos en una instancia EC2
             const metadataUrl = 'http://169.254.169.254/latest/meta-data/';
             
-            // Configurar timeout corto para no bloquear la página
+            // Configurar timeout más largo para AWS
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 2000);
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+            
+            // Intentar obtener el token IMDSv2 primero (más seguro)
+            let token = null;
+            try {
+                const tokenResponse = await fetch('http://169.254.169.254/latest/api/token', {
+                    method: 'PUT',
+                    headers: {
+                        'X-aws-ec2-metadata-token-ttl-seconds': '21600'
+                    },
+                    signal: controller.signal
+                });
+                if (tokenResponse.ok) {
+                    token = await tokenResponse.text();
+                }
+            } catch (e) {
+                console.log('IMDSv2 token no disponible, usando IMDSv1');
+            }
+            
+            // Configurar headers para la petición
+            const headers = token ? { 'X-aws-ec2-metadata-token': token } : {};
             
             const response = await fetch(metadataUrl + 'instance-id', {
                 signal: controller.signal,
-                mode: 'cors'
+                headers: headers
             });
             
             clearTimeout(timeoutId);
             
             if (response.ok) {
-                // Si llegamos aquí, probablemente estamos en AWS
+                // Si llegamos aquí, definitivamente estamos en AWS
                 const instanceId = await response.text();
                 
-                // Intentar obtener más información
-                const azResponse = await fetch(metadataUrl + 'placement/availability-zone', {
-                    signal: controller.signal
-                });
-                const availabilityZone = azResponse.ok ? await azResponse.text() : 'Desconocida';
+                // Obtener información adicional de AWS
+                const [azResponse, regionResponse, publicIpResponse, localIpResponse] = await Promise.all([
+                    fetch(metadataUrl + 'placement/availability-zone', { headers }),
+                    fetch(metadataUrl + 'placement/region', { headers }),
+                    fetch(metadataUrl + 'public-ipv4', { headers }).catch(() => null),
+                    fetch(metadataUrl + 'local-ipv4', { headers }).catch(() => null)
+                ]);
                 
-                const regionResponse = await fetch(metadataUrl + 'placement/region', {
-                    signal: controller.signal
-                });
+                const availabilityZone = azResponse.ok ? await azResponse.text() : 'Desconocida';
                 const region = regionResponse.ok ? await regionResponse.text() : 'Desconocida';
+                const publicIp = publicIpResponse && publicIpResponse.ok ? await publicIpResponse.text() : null;
+                const localIp = localIpResponse && localIpResponse.ok ? await localIpResponse.text() : null;
                 
                 return {
                     isAWS: true,
                     instanceId: instanceId,
                     availabilityZone: availabilityZone,
-                    region: region
+                    region: region,
+                    publicIp: publicIp,
+                    localIp: localIp
                 };
             }
         } catch (error) {
@@ -158,7 +198,9 @@ document.addEventListener('DOMContentLoaded', function() {
             isAWS: false,
             instanceId: null,
             availabilityZone: 'N/A',
-            region: 'N/A'
+            region: 'N/A',
+            publicIp: null,
+            localIp: null
         };
     }
     
@@ -222,45 +264,80 @@ document.addEventListener('DOMContentLoaded', function() {
         if (localhost) {
             environmentElement.textContent = 'Localhost';
             environmentElement.className = 'metadata-value environment-localhost';
-            publicIPElement.textContent = 'N/A (Local)';
-            regionElement.textContent = 'Local';
+            
+            // Cambiar etiquetas para localhost
+            publicIPLabel.textContent = '🌐 IP Pública:';
+            localIPLabel.textContent = '🏠 IP Local:';
+            
+            publicIPElement.textContent = 'N/A (Desarrollo Local)';
+            regionElement.textContent = 'Desarrollo Local';
             awsZoneElement.textContent = 'N/A';
+            
+            // Para localhost, la IP local es la misma que la pública
+            const localIP = await getLocalIP();
+            localIPElement.textContent = localIP || 'N/A';
             
             // Actualizar estado del despliegue
             updateDeploymentStatus('localhost');
         } else {
-            environmentElement.textContent = 'Internet/Nube';
-            environmentElement.className = 'metadata-value environment-cloud';
-            
-            // Obtener IP pública
-            const publicIP = await getPublicIP();
-            publicIPElement.textContent = publicIP;
-            
-            // Obtener información de ubicación
-            if (publicIP !== 'No disponible' && publicIP !== 'Error de conexión') {
-                const locationInfo = await getLocationInfo(publicIP);
-                regionElement.textContent = `${locationInfo.city}, ${locationInfo.region}, ${locationInfo.country}`;
-            }
-            
-            // Detectar si estamos en AWS
+            // Primero detectar si estamos en AWS (esto es lo más importante)
             const awsInfo = await detectAWSEnvironment();
+            
             if (awsInfo.isAWS) {
-                environmentElement.textContent = 'AWS Cloud';
+                // Estamos definitivamente en AWS EC2
+                environmentElement.textContent = 'AWS Cloud (EC2)';
                 environmentElement.className = 'metadata-value environment-aws';
                 awsZoneElement.textContent = awsInfo.availabilityZone;
-                regionElement.textContent = awsInfo.region;
+                regionElement.textContent = `${awsInfo.region} (${awsInfo.availabilityZone})`;
+                
+                // Cambiar etiquetas para AWS
+                publicIPLabel.textContent = '🌐 IP Servidor EC2:';
+                localIPLabel.textContent = '🏠 IP Privada EC2:';
+                
+                // Para AWS, mostrar las IPs del servidor (no del cliente)
+                if (awsInfo.publicIp) {
+                    publicIPElement.textContent = awsInfo.publicIp;
+                } else {
+                    publicIPElement.textContent = 'No asignada';
+                }
+                
+                if (awsInfo.localIp) {
+                    localIPElement.textContent = awsInfo.localIp;
+                } else {
+                    localIPElement.textContent = 'No disponible';
+                }
                 
                 // Actualizar estado del despliegue para AWS
                 updateDeploymentStatus('aws');
             } else {
+                // No estamos en AWS, pero tampoco en localhost
+                environmentElement.textContent = 'Internet/Nube';
+                environmentElement.className = 'metadata-value environment-cloud';
+                
+                // Cambiar etiquetas para nube genérica
+                publicIPLabel.textContent = '🌐 Tu IP Pública:';
+                localIPLabel.textContent = '🏠 Tu IP Local:';
+                
+                // Obtener IP pública del cliente (quien accede)
+                const publicIP = await getPublicIP();
+                publicIPElement.textContent = publicIP;
+                
+                // Obtener información de ubicación del cliente
+                if (publicIP !== 'No disponible' && publicIP !== 'Error de conexión') {
+                    const locationInfo = await getLocationInfo(publicIP);
+                    regionElement.textContent = `${locationInfo.city}, ${locationInfo.region}, ${locationInfo.country}`;
+                }
+                
+                awsZoneElement.textContent = 'N/A (No AWS)';
+                
+                // Obtener IP local del cliente
+                const localIP = await getLocalIP();
+                localIPElement.textContent = localIP;
+                
                 // Actualizar estado del despliegue para nube genérica
                 updateDeploymentStatus('cloud');
             }
         }
-        
-        // Obtener IP local
-        const localIP = await getLocalIP();
-        localIPElement.textContent = localIP;
     }
     
     /**
