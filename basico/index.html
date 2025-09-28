@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <!-- Configuración básica del documento -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¡Bienvenido a la Nube! - AWS Cloud Practitioner</title>
+    
+    <!-- Importar fuente moderna de Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Enlace al archivo CSS -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Contenedor principal de la página -->
+    <div class="container">
+        <!-- Sección principal con el contenido -->
+        <main class="hero-section">
+            <!-- Título principal -->
+            <h1 class="main-title">¡Bienvenido a la Nube!</h1>
+            
+            <!-- Subtítulo motivador -->
+            <p class="subtitle">Tu viaje en AWS comienza aquí 🚀</p>
+            
+            <!-- Botón principal con efecto hover -->
+            <button class="cta-button" id="deployButton">
+                Haz tu primer despliegue
+            </button>
+        </main>
+        
+        <!-- Información de metadata del servidor -->
+        <div class="metadata-panel" id="metadataPanel">
+            <div class="metadata-header">
+                <h3>📊 Información del Entorno</h3>
+                <button class="toggle-metadata" id="toggleMetadata">▼</button>
+            </div>
+            <div class="metadata-content" id="metadataContent">
+                <div class="metadata-item">
+                    <span class="metadata-label">🌐 IP Pública:</span>
+                    <span class="metadata-value" id="publicIP">Cargando...</span>
+                </div>
+                <div class="metadata-item">
+                    <span class="metadata-label">🏠 IP Local:</span>
+                    <span class="metadata-value" id="localIP">Detectando...</span>
+                </div>
+                <div class="metadata-item">
+                    <span class="metadata-label">☁️ Entorno:</span>
+                    <span class="metadata-value" id="environment">Analizando...</span>
+                </div>
+                <div class="metadata-item">
+                    <span class="metadata-label">🗺️ Zona AWS:</span>
+                    <span class="metadata-value" id="awsZone">N/A</span>
+                </div>
+                <div class="metadata-item">
+                    <span class="metadata-label">🌍 Región:</span>
+                    <span class="metadata-value" id="region">Detectando...</span>
+                </div>
+                <div class="metadata-item">
+                    <span class="metadata-label">⏰ Timestamp:</span>
+                    <span class="metadata-value" id="timestamp">--</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Contenedor para las partículas animadas -->
+        <div class="particles-container" id="particlesContainer"></div>
+        
+        <!-- Guía de despliegue (inicialmente oculta) -->
+        <div class="deployment-guide" id="deploymentGuide">
+            <div class="guide-content">
+                <button class="close-guide" id="closeGuide">×</button>
+                <div class="guide-header">
+                    <h2 id="guideTitle">🚀 Tu Primer Despliegue en AWS</h2>
+                    <div class="deployment-status" id="deploymentStatus">
+                        <span class="status-indicator" id="statusIndicator">📍</span>
+                        <span class="status-text" id="statusText">Detectando entorno...</span>
+                    </div>
+                </div>
+                
+                <div class="guide-steps" id="guideSteps">
+                    <!-- Los pasos se generarán dinámicamente con JavaScript -->
+                </div>
+                
+                <div class="guide-footer">
+                    <button class="guide-button secondary" id="copyCommand">📋 Copiar Comandos</button>
+                    <button class="guide-button primary" id="nextStep">Siguiente Paso</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mensaje de éxito para cuando ya está en AWS -->
+        <div class="success-message" id="successMessage">
+            <div class="message-content">
+                <h2>🎉 ¡Increíble!</h2>
+                <p id="successText">¡Tu aplicación ya está ejecutándose en AWS Cloud!</p>
+                <p>Has completado tu primer despliegue exitosamente.</p>
+                <div class="aws-badge">
+                    <span class="aws-icon">☁️</span>
+                    <span>AWS Cloud Practitioner</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Enlace al archivo JavaScript -->
+    <script src="script.js"></script>
+</body>
+</html>

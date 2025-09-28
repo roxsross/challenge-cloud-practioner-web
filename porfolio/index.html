@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Camino en la Nube AWS | Portfolio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        /* Variables CSS para paleta AWS */
+        :root {
+            --aws-orange: #FF9900;
+            --aws-blue: #232F3E;
+            --aws-light-blue: #4A90E2;
+            --aws-purple: #8B5CF6;
+            --aws-dark: #161B22;
+            --aws-light: #F8FAFC;
+            --aws-gray: #64748B;
+            --gradient-primary: linear-gradient(135deg, var(--aws-blue) 0%, var(--aws-purple) 50%, var(--aws-light-blue) 100%);
+            --gradient-hero: linear-gradient(135deg, #232F3E 0%, #4A90E2 25%, #8B5CF6 50%, #FF9900 75%, #232F3E 100%);
+        }
+
+        /* Reset y base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            color: var(--aws-dark);
+            background: var(--aws-light);
+            overflow-x: hidden;
+        }
+
+        .dark-mode {
+            background: var(--aws-dark);
+            color: var(--aws-light);
+        }
+
+        /* Scroll suave */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            background: var(--gradient-hero);
+            background-size: 400% 400%;
+            animation: gradientShift 8s ease infinite;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .hero-content {
+            max-width: 800px;
+            padding: 2rem;
+            z-index: 2;
+        }
+
+        .hero h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .hero p {
+            font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 1rem 2rem;
+            background: var(--aws-orange);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 153, 0, 0.3);
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 153, 0, 0.4);
+        }
+
+        /* Secciones generales */
+        .section {
+            padding: 5rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(2rem, 4vw, 3rem);
+            text-align: center;
+            margin-bottom: 3rem;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Sobre mí */
+        .about {
+            text-align: center;
+        }
+
+        .profile-img {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            margin: 0 auto 2rem;
+            background: var(--gradient-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            color: white;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .about-text {
+            font-size: 1.2rem;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+            color: var(--aws-gray);
+        }
+
+        .skills {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .skill-badge {
+            padding: 0.5rem 1rem;
+            background: var(--aws-light-blue);
+            color: white;
+            border-radius: 25px;
+            font-weight: 500;
+            transition: transform 0.3s ease;
+        }
+
+        .skill-badge:hover {
+            transform: scale(1.05);
+        }
+
+        /* Timeline de aprendizaje */
+        .learning-timeline {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .timeline-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .timeline-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .timeline-icon {
+            width: 60px;
+            height: 60px;
+            background: var(--gradient-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            margin-right: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .timeline-content h3 {
+            color: var(--aws-blue);
+            margin-bottom: 0.5rem;
+        }
+
+        /* Proyectos */
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .project-card {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .project-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        }
+
+        .project-icon {
+            width: 60px;
+            height: 60px;
+            background: var(--aws-orange);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .project-card h3 {
+            color: var(--aws-blue);
+            margin-bottom: 1rem;
+        }
+
+        .project-button {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: var(--aws-light-blue);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .project-button:hover {
+            background: var(--aws-purple);
+        }
+
+        /* Formulario de contacto */
+        .contact-form {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--aws-blue);
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--aws-light-blue);
+        }
+
+        .submit-button {
+            width: 100%;
+            padding: 1rem;
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .submit-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--aws-blue);
+            color: white;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        /* Toggle modo oscuro */
+        .theme-toggle {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            background: var(--aws-orange);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        /* Mensaje de éxito */
+        .success-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--aws-orange);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            z-index: 1001;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .success-message.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .timeline-item {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .timeline-icon {
+                margin-right: 0;
+                margin-bottom: 1rem;
+            }
+            
+            .skills {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Toggle modo oscuro -->
+    <button class="theme-toggle" onclick="toggleTheme()">
+        <i class="fas fa-moon"></i>
+    </button>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Construyendo mi camino en la nube ☁️</h1>
+            <p>Aprendiendo AWS paso a paso</p>
+            <a href="#learning" class="cta-button">Ver mi progreso</a>
+        </div>
+    </section>
+
+    <!-- Sobre mí -->
+    <section class="section about">
+        <h2 class="section-title">Sobre mí</h2>
+        <div class="profile-img">
+            <i class="fas fa-user"></i>
+        </div>
+        <p class="about-text">
+            Soy estudiante de AWS Cloud Practitioner, apasionada por la tecnología y el aprendizaje continuo. 
+            Mi objetivo es convertirme en una consultora experta en soluciones cloud, ayudando a empresas 
+            a transformar digitalmente sus operaciones.
+        </p>
+        <div class="skills">
+            <span class="skill-badge">EC2</span>
+            <span class="skill-badge">S3</span>
+            <span class="skill-badge">IAM</span>
+            <span class="skill-badge">Lambda</span>
+            <span class="skill-badge">CloudFormation</span>
+            <span class="skill-badge">VPC</span>
+        </div>
+    </section>
+
+    <!-- Mi Aprendizaje -->
+    <section id="learning" class="section">
+        <h2 class="section-title">Mi Aprendizaje</h2>
+        <div class="learning-timeline">
+            <div class="timeline-item">
+                <div class="timeline-icon">
+                    <i class="fas fa-cloud"></i>
+                </div>
+                <div class="timeline-content">
+                    <h3>Fundamentos Cloud</h3>
+                    <p>Conceptos básicos de computación en la nube, modelos de servicio y despliegue.</p>
+                </div>
+            </div>
+            
+            <div class="timeline-item">
+                <div class="timeline-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <div class="timeline-content">
+                    <h3>Seguridad</h3>
+                    <p>IAM, políticas de seguridad, cifrado y mejores prácticas de protección.</p>
+                </div>
+            </div>
+            
+            <div class="timeline-item">
+                <div class="timeline-icon">
+                    <i class="fas fa-server"></i>
+                </div>
+                <div class="timeline-content">
+                    <h3>Compute</h3>
+                    <p>EC2, Lambda, contenedores y servicios de cómputo escalables.</p>
+                </div>
+            </div>
+            
+            <div class="timeline-item">
+                <div class="timeline-icon">
+                    <i class="fas fa-database"></i>
+                </div>
+                <div class="timeline-content">
+                    <h3>Storage</h3>
+                    <p>S3, EBS, EFS y soluciones de almacenamiento distribuido.</p>
+                </div>
+            </div>
+            
+            <div class="timeline-item">
+                <div class="timeline-icon">
+                    <i class="fas fa-network-wired"></i>
+                </div>
+                <div class="timeline-content">
+                    <h3>Redes</h3>
+                    <p>VPC, subnets, gateways y configuración de redes seguras.</p>
+                </div>
+            </div>
+            
+            <div class="timeline-item">
+                <div class="timeline-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="timeline-content">
+                    <h3>Observabilidad</h3>
+                    <p>CloudWatch, CloudTrail, monitoreo y análisis de rendimiento.</p>
+                </div>
+            </div>
+            
+            <div class="timeline-item" style="background: var(--gradient-primary); color: white;">
+                <div class="timeline-icon" style="background: var(--aws-orange);">
+                    <i class="fas fa-certificate"></i>
+                </div>
+                <div class="timeline-content">
+                    <h3 style="color: white;">AWS Cloud Practitioner</h3>
+                    <p>Certificación en progreso - ¡Próximamente!</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Proyectos -->
+    <section class="section">
+        <h2 class="section-title">Mis Proyectos</h2>
+        <div class="projects-grid">
+            <div class="project-card">
+                <div class="project-icon">
+                    <i class="fas fa-globe"></i>
+                </div>
+                <h3>Hosting Estático en S3</h3>
+                <p>Página web personal desplegada en Amazon S3 con CloudFront para distribución global y certificado SSL.</p>
+                <a href="#" class="project-button">Ver más</a>
+            </div>
+            
+            <div class="project-card">
+                <div class="project-icon">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <h3>API con Lambda</h3>
+                <p>API REST serverless usando AWS Lambda y API Gateway para procesar formularios de contacto.</p>
+                <a href="#" class="project-button">Ver más</a>
+            </div>
+            
+            <div class="project-card">
+                <div class="project-icon">
+                    <i class="fas fa-images"></i>
+                </div>
+                <h3>Galería de Imágenes</h3>
+                <p>Aplicación web para subir y gestionar imágenes usando S3, Lambda y DynamoDB.</p>
+                <a href="#" class="project-button">Ver más</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contacto -->
+    <section class="section">
+        <h2 class="section-title">Contacto</h2>
+        <form class="contact-form" onsubmit="handleSubmit(event)">
+            <div class="form-group">
+                <label for="name">Nombre</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="message">Mensaje</label>
+                <textarea id="message" name="message" rows="5" required></textarea>
+            </div>
+            
+            <button type="submit" class="submit-button">Enviar mensaje</button>
+        </form>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; <span id="current-year"></span> - Página creada con HTML, CSS y JS mientras aprendo AWS 🚀</p>
+        <p style="margin-top: 0.5rem; opacity: 0.8;">
+            <!-- Despliegue: Sube este archivo a un bucket S3 con hosting estático habilitado -->
+            <!-- O despliega en GitHub Pages para empezar gratis -->
+        </p>
+    </footer>
+
+    <!-- Mensaje de éxito -->
+    <div class="success-message" id="successMessage">
+        <h3>¡Gracias por tu mensaje! 🎉</h3>
+        <p>Me pondré en contacto contigo pronto.</p>
+    </div>
+
+    <script>
+        // Año actual dinámico
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+
+        // Toggle modo oscuro
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const icon = document.querySelector('.theme-toggle i');
+            if (document.body.classList.contains('dark-mode')) {
+                icon.className = 'fas fa-sun';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                icon.className = 'fas fa-moon';
+                localStorage.setItem('theme', 'light');
+            }
+        }
+
+        // Cargar tema guardado
+        window.addEventListener('load', () => {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+                document.querySelector('.theme-toggle i').className = 'fas fa-sun';
+            }
+        });
+
+        // Scroll suave para botones
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Manejo del formulario
+        function handleSubmit(event) {
+            event.preventDefault();
+            
+            // Validación básica
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const message = document.getElementById('message').value.trim();
+            
+            if (!name || !email || !message) {
+                alert('Por favor, completa todos los campos.');
+                return;
+            }
+            
+            // Simular envío (aquí conectarías con AWS SES o API Gateway)
+            showSuccessMessage();
+            
+            // Limpiar formulario
+            document.querySelector('.contact-form').reset();
+        }
+
+        // Mostrar mensaje de éxito con confeti
+        function showSuccessMessage() {
+            const successMsg = document.getElementById('successMessage');
+            successMsg.classList.add('show');
+            
+            // Crear confeti
+            createConfetti();
+            
+            // Ocultar mensaje después de 3 segundos
+            setTimeout(() => {
+                successMsg.classList.remove('show');
+            }, 3000);
+        }
+
+        // Animación de confeti simple
+        function createConfetti() {
+            const colors = ['#FF9900', '#4A90E2', '#8B5CF6', '#232F3E'];
+            
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.style.position = 'fixed';
+                confetti.style.width = '10px';
+                confetti.style.height = '10px';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.top = '-10px';
+                confetti.style.zIndex = '9999';
+                confetti.style.borderRadius = '50%';
+                confetti.style.pointerEvents = 'none';
+                
+                document.body.appendChild(confetti);
+                
+                // Animación de caída
+                const fallDuration = Math.random() * 3 + 2;
+                confetti.animate([
+                    { transform: 'translateY(-10px) rotate(0deg)', opacity: 1 },
+                    { transform: `translateY(100vh) rotate(360deg)`, opacity: 0 }
+                ], {
+                    duration: fallDuration * 1000,
+                    easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+                });
+                
+                // Eliminar elemento después de la animación
+                setTimeout(() => {
+                    if (confetti.parentNode) {
+                        confetti.parentNode.removeChild(confetti);
+                    }
+                }, fallDuration * 1000);
+            }
+        }
+
+        // Animaciones al hacer scroll (Intersection Observer)
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observar elementos para animaciones
+        window.addEventListener('load', () => {
+            const animatedElements = document.querySelectorAll('.timeline-item, .project-card');
+            animatedElements.forEach(el => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(30px)';
+                el.style.transition = 'all 0.6s ease';
+                observer.observe(el);
+            });
+        });
+
+        /* 
+        INSTRUCCIONES DE DESPLIEGUE:
+        
+        1. AWS S3 Static Hosting:
+           - Crea un bucket S3 con nombre único
+           - Habilita "Static website hosting"
+           - Sube este archivo como index.html
+           - Configura permisos públicos de lectura
+           - Opcional: Configura CloudFront para HTTPS
+        
+        2. GitHub Pages:
+           - Crea un repositorio en GitHub
+           - Sube este archivo como index.html
+           - Ve a Settings > Pages
+           - Selecciona la rama main como source
+        
+        3. Netlify/Vercel:
+           - Arrastra y suelta este archivo en su interfaz
+           - Despliegue automático en segundos
+        */
+    </script>
+</body>
+</html>
