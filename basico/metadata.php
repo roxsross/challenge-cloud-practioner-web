@@ -71,10 +71,19 @@ try {
             'publicHostname' => getEC2Metadata('public-hostname', $token)
         ];
         
-        // Limpiar valores null
-        $metadata['data'] = array_filter($metadata['data'], function($value) {
-            return $value !== null && $value !== '';
-        });
+        // Limpiar valores null pero mantener información sobre qué no está disponible
+        $cleanData = [];
+        foreach ($metadata['data'] as $key => $value) {
+            if ($value !== null && $value !== '') {
+                $cleanData[$key] = $value;
+            } else {
+                // Mantener información sobre campos importantes que no están disponibles
+                if (in_array($key, ['publicIpv4', 'localIpv4'])) {
+                    $cleanData[$key] = null; // Mantener como null para que JS sepa que se intentó obtener
+                }
+            }
+        }
+        $metadata['data'] = $cleanData;
     } else {
         $metadata['error'] = 'No se pudo acceder a los metadatos de EC2';
         $metadata['debug'] = [

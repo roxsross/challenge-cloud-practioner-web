@@ -409,10 +409,27 @@ document.addEventListener('DOMContentLoaded', function() {
                     publicIPElement.textContent = 'Detectando...';
                 }
                 
+                // Mostrar IP privada con explicaciones claras
                 if (awsInfo.localIp) {
                     localIPElement.textContent = awsInfo.localIp;
                 } else {
-                    localIPElement.textContent = 'No accesible desde navegador';
+                    // Diferentes mensajes según el método de detección
+                    switch (awsInfo.method) {
+                        case 'server-metadata':
+                            localIPElement.textContent = 'No disponible en metadatos';
+                            break;
+                        case 'direct-metadata':
+                            localIPElement.textContent = 'No accesible desde navegador';
+                            break;
+                        case 'ip-pattern':
+                            localIPElement.textContent = 'No accesible desde navegador';
+                            break;
+                        case 'headers':
+                            localIPElement.textContent = 'No accesible desde navegador';
+                            break;
+                        default:
+                            localIPElement.textContent = 'No accesible desde navegador';
+                    }
                 }
                 
                 // Actualizar estado del despliegue para AWS
