@@ -16,13 +16,18 @@ function getEC2Metadata($endpoint, $token = null) {
     
     $context = stream_context_create([
         'http' => [
-            'timeout' => 3,
+            'timeout' => 5, // Aumentar timeout
             'method' => 'GET',
-            'header' => $token ? "X-aws-ec2-metadata-token: $token\r\n" : ""
+            'header' => $token ? "X-aws-ec2-metadata-token: $token\r\n" : "",
+            'ignore_errors' => true // Para capturar errores HTTP
         ]
     ]);
     
     $result = @file_get_contents($url, false, $context);
+    
+    // Debug: Log del resultado
+    error_log("Endpoint: $endpoint, Result: " . ($result !== false ? $result : 'FAILED'));
+    
     return $result !== false ? trim($result) : null;
 }
 
@@ -59,16 +64,46 @@ try {
     
     if ($instanceId) {
         $metadata['success'] = true;
+        
+        // Obtener metadatos uno por uno con logging
+        $availabilityZone = getEC2Metadata('placement/availability-zone', $token);
+        $region = getEC2Metadata('placement/region', $token);
+        $publicIpv4 = getEC2Metadata('public-ipv4', $token);
+        $localIpv4 = getEC2Metadata('local-ipv4', $token);
+        $instanceType = getEC2Metadata('instance-type', $token);
+        
+        // Intentar métodos alternativos para IP privada si falla
+        if (!$localIpv4) {
+            // Método alternativo 1: network/interfaces/macs/
+            $macs = getEC2Metadata('network/interfaces/macs/', $token);
+            if ($macs) {
+                $macList = explode("\n", trim($macs));
+                if (!empty($macList)) {
+                    $firstMac = trim($macList[0]);
+                    $localIpv4 = getEC2Metadata("network/interfaces/macs/{$firstMac}local-ipv4s", $token);
+                }
+            }
+        }
+        
         $metadata['data'] = [
             'instanceId' => $instanceId,
-            'availabilityZone' => getEC2Metadata('placement/availability-zone', $token),
-            'region' => getEC2Metadata('placement/region', $token),
-            'publicIpv4' => getEC2Metadata('public-ipv4', $token),
-            'localIpv4' => getEC2Metadata('local-ipv4', $token),
-            'instanceType' => getEC2Metadata('instance-type', $token),
+            'availabilityZone' => $availabilityZone,
+            'region' => $region,
+            'publicIpv4' => $publicIpv4,
+            'localIpv4' => $localIpv4,
+            'instanceType' => $instanceType,
             'amiId' => getEC2Metadata('ami-id', $token),
             'hostname' => getEC2Metadata('hostname', $token),
             'publicHostname' => getEC2Metadata('public-hostname', $token)
+        ];
+        
+        // Debug info
+        $metadata['debug'] = [
+            'token_used' => $token !== null,
+            'local_ip_attempts' => [
+                'direct' => getEC2Metadata('local-ipv4', $token) !== null,
+                'via_mac' => $localIpv4 !== null
+            ]
         ];
         
         // Limpiar valores null pero mantener información sobre qué no está disponible
