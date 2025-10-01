@@ -67,7 +67,7 @@ Repetir el proceso:
 ### Paso 2: Agregar el Código
 
 1. En el editor de código, **selecciona todo** (Ctrl+A) y bórralo
-2. Copia el código completo del artifact `lambda_ecommerce_completo.py`
+2. Copia el código completo del artifact `lambda_function.py` 
 3. Pega el código en el editor
 4. Click en **Deploy**
 5. Espera el mensaje "Changes deployed successfully"
